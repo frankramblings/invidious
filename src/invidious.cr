@@ -81,15 +81,19 @@ REQUEST_HEADERS_WHITELIST  = {"accept", "accept-encoding", "cache-control", "con
 RESPONSE_HEADERS_BLACKLIST = {"access-control-allow-origin", "alt-svc", "server", "cross-origin-opener-policy-report-only", "report-to", "cross-origin", "timing-allow-origin", "cross-origin-resource-policy"}
 HTTP_CHUNK_SIZE            = 10485760 # ~10MB
 
-CURRENT_BRANCH  = {{ "#{`git branch | sed -n '/* /s///p'`.strip}" }}
-CURRENT_COMMIT  = {{ "#{`git rev-list HEAD --max-count=1 --abbrev-commit`.strip}" }}
-CURRENT_VERSION = {{ "#{`git log -1 --format=%ci | awk '{print $1}' | sed s/-/./g`.strip}" }}
-CURRENT_TAG     = {{ "#{`git tag --points-at HEAD`.strip}" }}
+def build_meta(key : String, fallback : String) : String
+  ENV[key]? || fallback
+end
+
+CURRENT_BRANCH  = build_meta("INVIDIOUS_BUILD_BRANCH", "unknown")
+CURRENT_COMMIT  = build_meta("INVIDIOUS_BUILD_COMMIT", "unknown")
+CURRENT_VERSION = build_meta("INVIDIOUS_BUILD_VERSION", Time.utc.to_s("%Y.%m.%d"))
+CURRENT_TAG     = build_meta("INVIDIOUS_BUILD_TAG", "")
 
 # This is used to determine the `?v=` on the end of file URLs (for cache busting). We
 # only need to expire modified assets, so we can use this to find the last commit that changes
 # any assets
-ASSET_COMMIT = {{ "#{`git rev-list HEAD --max-count=1 --abbrev-commit -- assets`.strip}" }}
+ASSET_COMMIT = build_meta("INVIDIOUS_BUILD_ASSET_COMMIT", "unknown")
 
 SOFTWARE = {
   "name"    => "invidious",
